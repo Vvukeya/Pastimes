@@ -32,7 +32,7 @@ if (!in_array($page, $public_pages) && !isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Include header
+// Include header with navigation
 include 'includes/header.php';
 
 // Load the requested page
