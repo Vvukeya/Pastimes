@@ -1,7 +1,6 @@
 <?php
 // Helper functions
 // Student: Vutivi & Karabo
-
 function getCartCount($conn, $user_id) {
     $sql = "SELECT COALESCE(SUM(quantity), 0) as total FROM tblCart WHERE user_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
