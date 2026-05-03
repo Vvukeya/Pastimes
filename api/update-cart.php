@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+$conn = mysqli_connect('localhost', 'root', '', 'pastimes');
 
 header('Content-Type: application/json');
 
