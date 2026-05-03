@@ -217,20 +217,28 @@ $brands_result = mysqli_query($conn, $brands_sql);
             <div class="products-grid">
                 <?php if (mysqli_num_rows($products) > 0): ?>
                     <?php while ($product = mysqli_fetch_assoc($products)): ?>
-                        <a href="index.php?page=product&id=<?php echo $product['product_id']; ?>" class="product-card">
-                            <div class="product-image">
-                                <img src="<?php echo getProductImage($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" onerror="this.src='images/placeholder.jpg'">
-                                <?php if ($product['condition'] == 'New'): ?>
-                                    <span style="position: absolute; top: 10px; left: 10px; background: var(--gold); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">NEW</span>
-                                <?php endif; ?>
+                        <div class="product-card">
+                            <a href="index.php?page=product&id=<?php echo $product['product_id']; ?>" style="text-decoration: none; color: inherit;">
+                                <div class="product-image">
+                                    <img src="<?php echo getProductImage($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" onerror="this.src='images/placeholder.jpg'">
+                                    <?php if ($product['condition'] == 'New'): ?>
+                                        <span style="position: absolute; top: 10px; left: 10px; background: var(--gold); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">NEW</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="product-info">
+                                    <div class="product-brand"><?php echo htmlspecialchars($product['brand']); ?></div>
+                                    <h3 class="product-title"><?php echo htmlspecialchars($product['title']); ?></h3>
+                                    <div class="product-price">R <?php echo number_format($product['price'], 2); ?></div>
+                                    <span class="product-condition"><?php echo $product['condition']; ?></span>
+                                </div>
+                            </a>
+                            <!-- Add to Cart Button with Popup -->
+                            <div style="padding: 0 16px 16px 16px;">
+                                <button onclick="addToCartWithPopup(<?php echo $product['product_id']; ?>, '<?php echo addslashes($product['title']); ?>', <?php echo $product['price']; ?>)" class="add-to-cart-btn" style="background: var(--pastime-green); color: white; border: none; padding: 10px 16px; border-radius: var(--radius); cursor: pointer; width: 100%; font-size: 14px; font-weight: 600; transition: all 0.3s ease;">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
                             </div>
-                            <div class="product-info">
-                                <div class="product-brand"><?php echo htmlspecialchars($product['brand']); ?></div>
-                                <h3 class="product-title"><?php echo htmlspecialchars($product['title']); ?></h3>
-                                <div class="product-price">R <?php echo number_format($product['price'], 2); ?></div>
-                                <span class="product-condition"><?php echo $product['condition']; ?></span>
-                            </div>
-                        </a>
+                        </div>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <div style="text-align: center; padding: 60px; grid-column: 1/-1; background: white; border-radius: var(--radius);">
@@ -248,8 +256,166 @@ $brands_result = mysqli_query($conn, $brands_sql);
 <style>
     .product-card {
         position: relative;
+        background: white;
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
     }
     .product-image {
         position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+    .product-info {
+        padding: 16px;
+    }
+    .product-brand {
+        font-size: 12px;
+        color: var(--grey);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .product-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 8px 0;
+        line-height: 1.4;
+    }
+    .product-price {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--pastime-green);
+    }
+    .product-condition {
+        display: inline-block;
+        padding: 4px 8px;
+        background: var(--warm-beige);
+        border-radius: 20px;
+        font-size: 11px;
+        margin-top: 8px;
+    }
+    .add-to-cart-btn:hover {
+        background: var(--pastime-green-dark) !important;
+        transform: scale(1.02);
+    }
+    .btn-outline {
+        background: transparent;
+        color: var(--pastime-green);
+        border: 1px solid var(--pastime-green);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-outline:hover {
+        background: var(--pastime-green);
+        color: white;
+    }
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+    }
+    @media (max-width: 1024px) {
+        .products-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .products-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+        .products-grid { grid-template-columns: 1fr; }
     }
 </style>
+
+<script>
+// Add to Cart with Popup showing price
+function addToCartWithPopup(productId, productName, productPrice) {
+    // Show confirmation popup with product details
+    var userConfirmed = confirm(
+        "🛒 Add to Cart\n\n" +
+        "Product: " + productName + "\n" +
+        "Price: R " + parseFloat(productPrice).toFixed(2) + "\n\n" +
+        "Click OK to add this item to your cart."
+    );
+    
+    if (userConfirmed) {
+        // Add to cart via API
+        fetch('api/add-to-cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'product_id=' + productId + '&quantity=1'
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(productName + ' added to cart!', 'success');
+                // Update cart count
+                updateCartCount();
+            } else if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                showNotification(data.error || 'Error adding to cart', 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showNotification('Error adding to cart', 'error');
+        });
+    }
+}
+
+function updateCartCount() {
+    fetch('api/cart-count.php')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            var cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                cartCount.textContent = data.count || 0;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+        });
+}
+
+function showNotification(message, type) {
+    var notification = document.createElement('div');
+    var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    var bgColor = type === 'success' ? '#4CAF50' : '#f44336';
+    
+    notification.innerHTML = '<i class="fas ' + icon + '"></i> ' + message;
+    notification.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: white; z-index: 9999; animation: slideIn 0.3s ease; background-color: ' + bgColor + '; font-weight: 500; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+        notification.remove();
+    }, 3000);
+}
+
+// Add CSS animation if not exists
+if (!document.querySelector('#notification-style')) {
+    var style = document.createElement('style');
+    style.id = 'notification-style';
+    style.textContent = '@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }';
+    document.head.appendChild(style);
+}
+</script>
