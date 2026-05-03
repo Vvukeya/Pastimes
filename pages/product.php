@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 </div>
             </div>
             
-            <!-- Add to Cart Form -->
+            <!-- Add to Cart Form with Popup -->
             <?php if ($product['status'] != 'sold'): ?>
                 <div style="background: white; border: 2px solid var(--light-grey); border-radius: var(--radius); padding: 20px; margin-bottom: 24px;">
                     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                             <input type="number" id="quantity" name="quantity" value="1" min="1" max="99" style="width: 60px; text-align: center; border: none; padding: 12px 0; font-size: 16px;">
                             <button type="button" class="qty-btn plus-btn" data-id="quantity" style="padding: 12px 16px; background: none; border: none; cursor: pointer; font-size: 18px;">+</button>
                         </div>
-                        <button onclick="addToCart(<?php echo $product_id; ?>)" class="btn-primary" style="flex: 1; padding: 14px 24px; font-size: 16px;">
+                        <button onclick="addToCartWithPopup(<?php echo $product_id; ?>, '<?php echo addslashes($product['title']); ?>', <?php echo $product['price']; ?>)" class="btn-primary" style="flex: 1; padding: 14px 24px; font-size: 16px;">
                             <i class="fas fa-shopping-cart"></i> Add to Cart
                         </button>
                     </div>
@@ -256,6 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 30px;
+        margin-top: 20px;
     }
     .product-card {
         text-decoration: none;
@@ -323,6 +324,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
             grid-template-columns: 1fr !important;
         }
     }
+    @media (max-width: 480px) {
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <script>
@@ -355,49 +361,88 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function addToCart(productId) {
-    var quantity = document.getElementById('quantity').value;
+// Add to Cart with Popup showing price (includes quantity from product page)
+function addToCartWithPopup(productId, productName, productPrice) {
+    // Get quantity if on product page
+    var quantity = 1;
+    var quantityInput = document.getElementById('quantity');
+    if (quantityInput) {
+        quantity = parseInt(quantityInput.value) || 1;
+    }
     
-    fetch('api/add-to-cart.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'product_id=' + productId + '&quantity=' + quantity
-    })
-    .then(function(response) {
-        return response.json();
-    })
-    .then(function(data) {
-        if (data.success) {
-            showNotification('Item added to cart successfully!', 'success');
-            fetch('api/cart-count.php')
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    var cartCount = document.getElementById('cartCount');
-                    if (cartCount) cartCount.textContent = data.count || 0;
-                });
-        } else if (data.redirect) {
-            window.location.href = data.redirect;
-        } else {
-            showNotification(data.error || 'Error adding to cart', 'error');
-        }
-    })
-    .catch(function(error) {
-        console.error('Error:', error);
-        showNotification('Error adding to cart', 'error');
-    });
+    var totalPrice = productPrice * quantity;
+    
+    // Show confirmation popup with product details
+    var userConfirmed = confirm(
+        "🛒 Add to Cart\n\n" +
+        "Product: " + productName + "\n" +
+        "Price per item: R " + parseFloat(productPrice).toFixed(2) + "\n" +
+        "Quantity: " + quantity + "\n" +
+        "Total: R " + totalPrice.toFixed(2) + "\n\n" +
+        "Click OK to add this item to your cart."
+    );
+    
+    if (userConfirmed) {
+        // Add to cart via API
+        fetch('api/add-to-cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'product_id=' + productId + '&quantity=' + quantity
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(productName + ' added to cart!', 'success');
+                // Update cart count
+                updateCartCount();
+            } else if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                showNotification(data.error || 'Error adding to cart', 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showNotification('Error adding to cart', 'error');
+        });
+    }
+}
+
+function updateCartCount() {
+    fetch('api/cart-count.php')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            var cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                cartCount.textContent = data.count || 0;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+        });
 }
 
 function showNotification(message, type) {
     var notification = document.createElement('div');
     var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    var bgColor = type === 'success' ? '#4CAF50' : '#f44336';
+    
     notification.innerHTML = '<i class="fas ' + icon + '"></i> ' + message;
-    notification.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: white; z-index: 9999; animation: slideIn 0.3s ease; background-color: ' + (type === 'success' ? '#4CAF50' : '#f44336') + '; font-weight: 500;';
+    notification.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: white; z-index: 9999; animation: slideIn 0.3s ease; background-color: ' + bgColor + '; font-weight: 500; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
     document.body.appendChild(notification);
-    setTimeout(function() { notification.remove(); }, 3000);
+    
+    setTimeout(function() {
+        notification.remove();
+    }, 3000);
 }
 
+// Add CSS animation if not exists
 if (!document.querySelector('#notification-style')) {
     var style = document.createElement('style');
     style.id = 'notification-style';
