@@ -1,6 +1,9 @@
 <?php
 // Get current page for active class
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
+if (!function_exists('getCartCount')) {
+    require_once __DIR__ . '/functions.php';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
