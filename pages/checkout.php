@@ -15,6 +15,7 @@ if (mysqli_num_rows($cart_items) == 0) {
 
 $error = '';
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delivery_address = sanitizeInput($_POST['delivery_address'] ?? '');
     $payment_method = sanitizeInput($_POST['payment_method'] ?? '');
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container" style="padding: 40px 0;">
     <h1 class="section-title">Checkout</h1>
-    
+<!-- php if-statement to handle error-->
     <?php if ($error): ?>
         <div class="error-message" style="background: #FFEBEE; padding: 12px; border-radius: 8px; margin-bottom: 20px; color: #F44336;">
             <?php echo $error; ?>
