@@ -55,4 +55,3 @@ if (isset($page_files[$page]) && file_exists($page_files[$page])) {
 
 // Include footer
 include 'includes/footer.php';
-?>
