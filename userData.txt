@@ -1,0 +1,26 @@
+1 Admin
+email: admin@pastimes.com
+username: admin
+password_hash: 0192023a7bbd73250516f069df18b500
+
+2. John Smith
+email: john.smith@email.com
+username: johnsmith 
+password_hash: 482c811da5d5b4bc6d497ffa98491e38
+
+3. Sarah Johnson
+email: sarah.j@email.com
+username: sarahj
+password_hash: 482c811da5d5b4bc6d497ffa98491e38
+
+4. Michael Brown
+email: michael.b@email.com
+username: mbrown
+password_hash: 482c811da5d5b4bc6d497ffa98491e38
+
+5 Emily Davis
+email: emily.d@email.com
+username: emilyd
+password_hash: 482c811da5d5b4bc6d497ffa98491e38
+
+
