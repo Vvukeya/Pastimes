@@ -3,7 +3,6 @@
 // Student: Vutivi & Karabo
 
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-
 if ($product_id == 0) {
     header('Location: index.php?page=browse');
     exit();
