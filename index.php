@@ -26,11 +26,12 @@ $page_files = [
     'checkout' => 'pages/checkout.php',
     'dashboard' => 'pages/dashboard.php',
     'sell' => 'pages/sell.php',
-    'order-success' => 'pages/order-success.php'
+    'order-success' => 'pages/order-success.php',
+    'seller' => 'pages/seller.php' 
 ];
 
 // Pages that don't require login
-$public_pages = ['home', 'register', 'login', 'browse', 'product'];
+$public_pages = ['home', 'register', 'login', 'browse', 'product', 'seller'];
 
 // Check if user needs to be logged in
 if (!in_array($page, $public_pages) && !isset($_SESSION['user_id'])) {
