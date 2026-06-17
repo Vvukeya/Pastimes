@@ -28,7 +28,7 @@ mysqli_stmt_bind_param($related_stmt, "iss", $product_id, $product['brand'], $pr
 mysqli_stmt_execute($related_stmt);
 $related_products = mysqli_stmt_get_result($related_stmt);
 
-// Handle message sending
+// Handle message sending with file attachment
 $message_sent = false;
 $message_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
@@ -36,17 +36,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         $login_required = true;
     } else {
         $message = sanitizeInput($_POST['message'] ?? '');
-        if (!empty($message)) {
-            if (sendMessage($conn, $_SESSION['user_id'], $product['seller_id'], $product_id, $message)) {
+        $file_name = null;
+        $file_path = null;
+        $file_type = null;
+        $file_size = null;
+        
+        // Handle file upload
+        if (isset($_FILES['message_file']) && $_FILES['message_file']['error'] == UPLOAD_ERR_OK) {
+            $upload_result = uploadChatFile($_FILES['message_file']);
+            if ($upload_result['success']) {
+                $file_name = $upload_result['file_name'];
+                $file_path = $upload_result['file_path'];
+                $file_type = $upload_result['file_type'];
+                $file_size = $upload_result['file_size'];
+            } else {
+                $message_error = $upload_result['error'];
+            }
+        }
+        
+        if (empty($message) && !$file_name) {
+            $message_error = 'Please enter a message or attach a file.';
+        } elseif (empty($message_error)) {
+            if (sendMessageWithFile($conn, $_SESSION['user_id'], $product['seller_id'], $product_id, $message, $file_name, $file_path, $file_type, $file_size)) {
                 $message_sent = true;
             } else {
                 $message_error = 'Failed to send message. Please try again.';
             }
-        } else {
-            $message_error = 'Please enter a message.';
         }
     }
 }
+
+// Check if current user is following this seller
+$is_following = false;
+$follower_count = 0;
+if (isset($_SESSION['user_id']) && $_SESSION['user_id'] != $product['seller_id']) {
+    $is_following = isFollowing($conn, $_SESSION['user_id'], $product['seller_id']);
+}
+$follower_count = getFollowerCount($conn, $product['seller_id']);
 ?>
 
 <div class="container" style="padding: 40px 0;">
@@ -139,6 +165,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 </div>
             </div>
             
+            <!-- Follow Seller Section -->
+            <div style="background: var(--warm-beige); border-radius: var(--radius); padding: 20px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h3 style="margin-bottom: 5px;">
+                            <i class="fas fa-store"></i> Seller: <?php echo htmlspecialchars($product['seller_name']); ?>
+                        </h3>
+                        <div style="color: var(--grey); font-size: 14px;">
+                            <i class="fas fa-users"></i> <span id="productFollowerCount"><?php echo $follower_count; ?></span> follower<?php echo $follower_count != 1 ? 's' : ''; ?>
+                        </div>
+                    </div>
+                    
+                    <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] != $product['seller_id']): ?>
+                        <button id="followBtnProduct" 
+                                onclick="toggleFollowOnProduct(<?php echo $product['seller_id']; ?>)"
+                                class="<?php echo $is_following ? 'btn-outline' : 'btn-primary'; ?>"
+                                style="min-width: 120px;">
+                            <i class="fas <?php echo $is_following ? 'fa-user-minus' : 'fa-user-plus'; ?>"></i>
+                            <span id="followBtnProductText"><?php echo $is_following ? 'Unfollow' : 'Follow'; ?></span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <a href="index.php?page=seller&id=<?php echo $product['seller_id']; ?>" class="btn-outline" style="display: inline-block; width: 100%; text-align: center;">
+                        <i class="fas fa-store"></i> View Seller's Other Items
+                    </a>
+                </div>
+            </div>
+            
             <!-- Description -->
             <div style="margin-bottom: 24px;">
                 <h3>Description</h3>
@@ -169,20 +225,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 </div>
             <?php endif; ?>
             
-            <!-- Contact Seller Form -->
+            <!-- Contact Seller Form with File Upload -->
             <div style="border-top: 1px solid var(--light-grey); padding-top: 24px;">
                 <h3><i class="fas fa-envelope"></i> Contact Seller</h3>
-                <p style="color: var(--grey); font-size: 14px; margin-bottom: 15px;">Have questions about this item? Message the seller directly.</p>
+                <p style="color: var(--grey); font-size: 14px; margin-bottom: 15px;">Have questions about this item? Message the seller directly. You can also attach images or files (max 5MB).</p>
                 
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <form method="POST" action="">
-                        <div class="form-group">
-                            <textarea name="message" rows="3" placeholder="Ask a question about this item..." style="width: 100%; padding: 12px; border: 1px solid var(--light-grey); border-radius: var(--radius); resize: vertical;"></textarea>
+                    <?php if ($_SESSION['user_id'] == $product['seller_id']): ?>
+                        <div style="background: var(--warm-beige); padding: 15px; border-radius: var(--radius); margin-bottom: 15px;">
+                            <i class="fas fa-info-circle"></i> You are the seller of this item. You cannot message yourself.
                         </div>
-                        <button type="submit" name="send_message" class="btn-primary">
-                            <i class="fas fa-paper-plane"></i> Send Message
-                        </button>
-                    </form>
+                    <?php else: ?>
+                        <form method="POST" action="" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <textarea name="message" rows="3" placeholder="Ask a question about this item..." style="width: 100%; padding: 12px; border: 1px solid var(--light-grey); border-radius: var(--radius); resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="file-label" style="display: inline-flex; align-items: center; gap: 8px; background: var(--warm-beige); padding: 8px 16px; border-radius: var(--radius); cursor: pointer;">
+                                    <i class="fas fa-paperclip"></i> Attach File (Images, PDF, Documents)
+                                    <input type="file" name="message_file" style="display: none;" onchange="updateFileName(this, 'selectedFileName')">
+                                </label>
+                                <span id="selectedFileName" class="selected-file" style="margin-left: 10px; font-size: 12px; color: var(--grey);">No file selected (max 5MB)</span>
+                            </div>
+                            <button type="submit" name="send_message" class="btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Message
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 <?php else: ?>
                     <p>Please <a href="index.php?page=login">login</a> to message the seller.</p>
                 <?php endif; ?>
@@ -248,8 +317,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         background: var(--pastime-green-dark);
         transform: translateY(-2px);
     }
+    .btn-outline {
+        background: transparent;
+        color: var(--pastime-green);
+        border: 1px solid var(--pastime-green);
+        border-radius: var(--radius);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-outline:hover {
+        background: var(--pastime-green);
+        color: white;
+    }
     .form-group {
         margin-bottom: 15px;
+    }
+    .file-label {
+        transition: all 0.3s ease;
+    }
+    .file-label:hover {
+        background: var(--light-grey) !important;
     }
     .products-grid {
         display: grid;
@@ -359,6 +450,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function updateFileName(input, spanId) {
+    if (input.files && input.files[0]) {
+        document.getElementById(spanId).textContent = input.files[0].name;
+    } else {
+        document.getElementById(spanId).textContent = 'No file selected (max 5MB)';
+    }
+}
+
+// Toggle follow on product page
+function toggleFollowOnProduct(sellerId) {
+    var btn = document.getElementById('followBtnProduct');
+    var isCurrentlyFollowing = btn.classList.contains('btn-outline');
+    var action = isCurrentlyFollowing ? 'unfollow' : 'follow';
+    
+    fetch('api/follow.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=' + action + '&following_id=' + sellerId
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            if (data.is_following) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+                btn.innerHTML = '<i class="fas fa-user-minus"></i> <span>Unfollow</span>';
+            } else {
+                btn.classList.remove('btn-outline');
+                btn.classList.add('btn-primary');
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> <span>Follow</span>';
+            }
+            document.getElementById('productFollowerCount').textContent = data.follower_count;
+            showNotification(data.message, 'success');
+        } else {
+            showNotification(data.error || 'Error', 'error');
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        showNotification('Error processing request', 'error');
+    });
+}
 
 // Add to Cart with Popup showing price (includes quantity from product page)
 function addToCartWithPopup(productId, productName, productPrice) {
