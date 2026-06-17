@@ -315,6 +315,10 @@ $recent_messages = mysqli_query($conn, $sql);
                     <i class="fas fa-envelope"></i>
                     <span>Messages</span>
                 </a>
+                <a href="chat-monitor.php">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Monitor</span>
+                </a>
                 <hr>
                 <a href="../index.php">
                     <i class="fas fa-store"></i>
@@ -418,6 +422,7 @@ $recent_messages = mysqli_query($conn, $sql);
                         <a href="products.php" class="btn-outline">Manage Products</a>
                         <a href="users.php" class="btn-outline">Manage Users</a>
                         <a href="orders.php" class="btn-outline">View All Orders</a>
+                        
                     </div>
                 </div>
             </div>

@@ -85,6 +85,10 @@ $users = mysqli_query($conn, $sql);
                 <a href="orders.php"><i class="fas fa-shopping-cart"></i> Orders</a>
                 <a href="users.php" class="active"><i class="fas fa-users"></i> Users</a>
                 <a href="messages.php"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="chat-monitor.php">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Monitor</span>
+                </a>
                 <hr>
                 <a href="../index.php"><i class="fas fa-store"></i> View Store</a>
                 <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>

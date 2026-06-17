@@ -90,6 +90,10 @@ $products = mysqli_query($conn, $sql);
                 <a href="orders.php"><i class="fas fa-shopping-cart"></i><span>Orders</span></a>
                 <a href="users.php"><i class="fas fa-users"></i><span>Users</span></a>
                 <a href="messages.php"><i class="fas fa-envelope"></i><span>Messages</span></a>
+                <a href="chat-monitor.php">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Monitor</span>
+                </a>
                 <hr>
                 <a href="../index.php"><i class="fas fa-store"></i><span>View Store</span></a>
                 <a href="../logout.php"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
