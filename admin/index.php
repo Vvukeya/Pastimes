@@ -10,7 +10,7 @@ require_once '../includes/auth.php';
 
 // Check admin access - if not admin, redirect to login
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../index.php?page=login');
+    header('Location: ../index.php?page=login&admin=1');
     exit();
 }
 
