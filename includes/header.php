@@ -94,6 +94,7 @@ if (!function_exists('getCartCount')) {
                             </div>
                         </div>
                     <?php else: ?>
+                        <a href="index.php?page=login&admin=1" class="btn-outline">Admin Login</a>
                         <a href="index.php?page=login" class="btn-outline">Login</a>
                         <a href="index.php?page=register" class="btn-primary">Register</a>
                     <?php endif; ?>
