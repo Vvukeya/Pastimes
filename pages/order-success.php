@@ -42,7 +42,8 @@ if ($row = mysqli_fetch_assoc($order_items)) {
         
         <?php if ($order_info): ?>
             <p style="margin-bottom: 8px;">Thank you for your purchase, <?php echo htmlspecialchars($_SESSION['name']); ?>!</p>
-            <p style="margin-bottom: 24px;">Your order number is: <strong><?php echo $order_number; ?></strong></p>
+            <p style="margin-bottom: 8px;">Your order number is: <strong><?php echo $order_number; ?></strong></p>
+            <p style="margin-bottom: 24px;">Your session ID is: <strong><?php echo htmlspecialchars(session_id()); ?></strong></p>
             
             <div style="background: var(--warm-beige); padding: 20px; border-radius: var(--radius); text-align: left; margin-bottom: 24px;">
                 <h3 style="margin-bottom: 16px;">Order Summary</h3>
