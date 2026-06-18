@@ -378,13 +378,13 @@ if (isset($_GET['error']) && $_GET['error'] == 'not_verified') {
                 <h2 style="margin-bottom: 20px;"><i class="fas fa-envelope"></i> Messages</h2>
                 
                 <?php if ($reply_sent): ?>
-                    <div style="background: #E8F5E9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4CAF50;">
+                    <div class="message-card-body admin" style="margin-bottom: 20px;">
                         <i class="fas fa-check-circle"></i> Reply sent successfully!
                     </div>
                 <?php endif; ?>
                 
                 <?php if ($reply_error): ?>
-                    <div style="background: #FFEBEE; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #F44336;">
+                    <div class="message-card-body" style="background: #FFEBEE; border-color: #FBCACA; margin-bottom: 20px;">
                         <i class="fas fa-exclamation-circle"></i> <?php echo $reply_error; ?>
                     </div>
                 <?php endif; ?>
@@ -396,78 +396,63 @@ if (isset($_GET['error']) && $_GET['error'] == 'not_verified') {
                             $is_admin = ($msg['is_admin_reply'] == 1);
                             $is_received = (!$is_sender && !$is_admin);
                         ?>
-                            <div class="message-item" id="message-<?php echo $msg['message_id']; ?>" style="border-bottom: 1px solid var(--light-grey); padding: 20px; <?php echo ($is_received && $msg['is_read'] == 0) ? 'background: #F5F0E8;' : ''; ?>">
-                                <!-- Message Header -->
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap;">
-                                    <div>
-                                        <strong style="font-size: 16px;">
-                                            <?php if ($is_admin): ?>
-                                                <i class="fas fa-user-shield" style="color: var(--pastime-green);"></i>
-                                                <span style="color: var(--pastime-green);">Admin</span>
-                                            <?php else: ?>
-                                                <i class="fas fa-user-circle"></i>
-                                                <?php echo htmlspecialchars($msg['sender_name']); ?>
-                                            <?php endif; ?>
-                                        </strong>
+                            <div class="message-item <?php echo ($is_received && $msg['is_read'] == 0) ? 'unread' : ''; ?>" id="message-<?php echo $msg['message_id']; ?>">
+                                <div class="message-header">
+                                    <div class="message-meta">
+                                        <?php if ($is_admin): ?>
+                                            <span class="message-pill message-pill-admin"><i class="fas fa-user-shield"></i> Admin</span>
+                                        <?php else: ?>
+                                            <span class="message-pill message-pill-user"><i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($msg['sender_name']); ?></span>
+                                        <?php endif; ?>
                                         <?php if ($is_sender): ?>
-                                            <span style="background: var(--pastime-green); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">You</span>
+                                            <span class="message-pill message-pill-user">You</span>
                                         <?php endif; ?>
                                         <?php if ($is_admin): ?>
-                                            <span style="background: #FF9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">
-                                                <i class="fas fa-star"></i> Admin Response
-                                            </span>
+                                            <span class="message-pill message-pill-admin"><i class="fas fa-star"></i> Admin Response</span>
                                         <?php endif; ?>
                                     </div>
-                                    <small style="color: var(--grey);">
-                                        <i class="far fa-clock"></i> <?php echo date('M d, Y H:i', strtotime($msg['created_at'])); ?>
-                                    </small>
+                                    <div class="message-meta">
+                                        <span><i class="far fa-clock"></i> <?php echo date('M d, Y H:i', strtotime($msg['created_at'])); ?></span>
+                                    </div>
                                 </div>
-                                
-                                <!-- Product Info -->
+
                                 <?php if ($msg['product_title']): ?>
-                                    <div style="margin-bottom: 12px; font-size: 13px; background: var(--warm-beige); padding: 8px 12px; border-radius: var(--radius); display: inline-block;">
-                                        <i class="fas fa-tag"></i> Regarding: 
-                                        <a href="index.php?page=product&id=<?php echo $msg['product_id']; ?>" style="color: var(--pastime-green); text-decoration: none; font-weight: 500;">
-                                            <?php echo htmlspecialchars($msg['product_title']); ?>
-                                        </a>
+                                    <div class="message-product-tag">
+                                        <i class="fas fa-tag"></i>
+                                        <span>Regarding <a href="index.php?page=product&id=<?php echo $msg['product_id']; ?>" style="color: var(--pastime-green); text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($msg['product_title']); ?></a></span>
                                     </div>
                                 <?php endif; ?>
-                                
-                                <!-- Message Content -->
-                                <div style="margin: 12px 0; padding: 15px; background: <?php echo $is_admin ? '#E8F5E9' : 'white'; ?>; border-radius: var(--radius); border-left: 3px solid <?php echo $is_admin ? 'var(--pastime-green)' : 'var(--pastime-green)'; ?>;">
+
+                                <div class="message-content <?php echo $is_admin ? 'admin' : ''; ?>">
                                     <?php if (!empty($msg['message_text'])): ?>
                                         <p><?php echo nl2br(htmlspecialchars($msg['message_text'])); ?></p>
                                     <?php endif; ?>
-                                    
-                                    <!-- File Attachment Display -->
+
                                     <?php if (!empty($msg['file_path'])): ?>
-                                        <div style="margin-top: 10px;">
-                                            <a href="<?php echo $msg['file_path']; ?>" target="_blank" class="file-attachment" style="display: inline-flex; align-items: center; gap: 10px; background: #f0f0f0; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--charcoal);">
-                                                <i class="fas <?php echo getFileIcon($msg['file_type']); ?>" style="font-size: 20px; color: var(--pastime-green);"></i>
-                                                <div>
-                                                    <div class="file-name" style="font-size: 13px; font-weight: 500;"><?php echo htmlspecialchars($msg['file_name']); ?></div>
-                                                    <div class="file-size" style="font-size: 10px; color: var(--grey);"><?php echo formatFileSize($msg['file_size']); ?></div>
-                                                </div>
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                        </div>
+                                        <a href="<?php echo $msg['file_path']; ?>" target="_blank" class="message-attachment">
+                                            <i class="fas <?php echo getFileIcon($msg['file_type']); ?>" style="font-size: 18px; color: var(--pastime-green);"></i>
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 600;"><?php echo htmlspecialchars($msg['file_name']); ?></div>
+                                                <div style="font-size: 11px; color: var(--grey);"><?php echo formatFileSize($msg['file_size']); ?></div>
+                                            </div>
+                                            <i class="fas fa-download"></i>
+                                        </a>
                                     <?php endif; ?>
                                 </div>
-                                
-                                <!-- Reply Button and Form (only for received messages from users, not admin) -->
+
                                 <?php if ($is_received && !$is_admin): ?>
                                     <div style="margin-top: 12px;">
-                                        <button onclick="toggleReplyForm(<?php echo $msg['message_id']; ?>, <?php echo $msg['sender_id']; ?>, <?php echo $msg['product_id'] ?: 'null'; ?>)" class="btn-outline" style="padding: 6px 16px; font-size: 13px;">
+                                        <button onclick="toggleReplyForm(<?php echo $msg['message_id']; ?>, <?php echo $msg['sender_id']; ?>, <?php echo $msg['product_id'] ?: 'null'; ?>)" class="btn-outline" style="padding: 8px 16px; font-size: 13px;">
                                             <i class="fas fa-reply"></i> Reply
                                         </button>
                                         
                                         <!-- Reply Form with File Upload (hidden by default) -->
-                                        <div id="reply-form-<?php echo $msg['message_id']; ?>" style="display: none; margin-top: 15px;">
+                                        <div id="reply-form-<?php echo $msg['message_id']; ?>" class="reply-form-shell" style="display: none;">
                                             <form method="POST" action="index.php?page=dashboard&tab=messages" enctype="multipart/form-data" class="reply-form">
                                                 <input type="hidden" name="receiver_id" value="<?php echo $msg['sender_id']; ?>">
                                                 <input type="hidden" name="product_id" value="<?php echo $msg['product_id']; ?>">
                                                 <div class="form-group">
-                                                    <textarea name="reply_message" rows="3" placeholder="Type your reply here..." style="width: 100%; padding: 12px; border: 1px solid var(--light-grey); border-radius: var(--radius); resize: vertical;"></textarea>
+                                                    <textarea name="reply_message" rows="3" placeholder="Type your reply here..."></textarea>
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="file-label" style="display: inline-flex; align-items: center; gap: 8px; background: var(--warm-beige); padding: 8px 16px; border-radius: var(--radius); cursor: pointer;">
@@ -476,7 +461,7 @@ if (isset($_GET['error']) && $_GET['error'] == 'not_verified') {
                                                     </label>
                                                     <span id="fileName_<?php echo $msg['message_id']; ?>" class="selected-file" style="margin-left: 10px; font-size: 12px; color: var(--grey);">No file selected (max 5MB)</span>
                                                 </div>
-                                                <div style="display: flex; gap: 10px;">
+                                                <div class="reply-form-actions">
                                                     <button type="submit" name="send_reply" class="btn-primary" style="padding: 8px 20px;">
                                                         <i class="fas fa-paper-plane"></i> Send Reply
                                                     </button>
