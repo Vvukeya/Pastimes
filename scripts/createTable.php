@@ -4,7 +4,9 @@
 
 $conn = require_once 'DBConn.php';
 
-function dropTable($conn, $tableName) {
+/** @var mysqli $conn */
+
+function dropTable(mysqli $conn, $tableName) {
     $sql = "DROP TABLE IF EXISTS `$tableName`";
     if (mysqli_query($conn, $sql)) {
         echo "Table `$tableName` dropped successfully.<br>";
@@ -15,7 +17,7 @@ function dropTable($conn, $tableName) {
     }
 }
 
-function createUserTable($conn) {
+function createUserTable(mysqli $conn) {
     $sql = "CREATE TABLE IF NOT EXISTS `tblUser` (
         `user_id` INT(11) NOT NULL AUTO_INCREMENT,
         `name` VARCHAR(100) NOT NULL,
@@ -42,7 +44,7 @@ function createUserTable($conn) {
     }
 }
 
-function loadUserData($conn, $filename) {
+function loadUserData(mysqli $conn, $filename) {
     $filepath = __DIR__ . '/../data/' . $filename;
     
     if (!file_exists($filepath)) {
