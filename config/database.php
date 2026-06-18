@@ -22,4 +22,5 @@ mysqli_set_charset($conn, "utf8mb4");
 
 // Include functions
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/ShoppingCart.php';
 ?>
