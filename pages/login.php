@@ -7,6 +7,15 @@
 $error = '';
 $username = '';
 $admin_portal = isset($_GET['admin']) && $_GET['admin'] == '1';
+$notice = '';
+
+if (isset($_GET['message'])) {
+    if ($_GET['message'] === 'checkout') {
+        $notice = 'Please log in or register before checking out. Your cart will be kept for when you return.';
+    } elseif ($_GET['message'] === 'cart') {
+        $notice = 'Please log in or register to view and save your shopping cart.';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitizeInput($_POST['username'] ?? '');
@@ -72,6 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($admin_portal): ?>
         <div style="background: #FFF3E0; padding: 12px 14px; border-radius: 8px; margin-bottom: 20px; color: #8A5A00; border-left: 4px solid #F39C12;">
             Admin portal. Enter your administrator credential.
+        </div>
+    <?php endif; ?>
+
+    <?php if ($notice): ?>
+        <div style="background: #E8F5E9; padding: 12px 14px; border-radius: 8px; margin-bottom: 20px; color: #2E7D32; border-left: 4px solid #4CAF50;">
+            <?php echo htmlspecialchars($notice); ?>
         </div>
     <?php endif; ?>
     
