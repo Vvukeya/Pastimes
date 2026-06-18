@@ -4,25 +4,55 @@
 
 /** @var mysqli $conn */
 
-require_once __DIR__ . '/../includes/auth.php';
-requireLogin();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php?page=login&message=cart');
+    exit();
+}
+
+$cart = new ShoppingCart($conn, intval($_SESSION['user_id']));
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['remove'])) {
+    $cart->RemoveItem(intval($_GET['remove']));
+    header('Location: index.php?page=cart');
+    exit();
+}
 
 $cart_items = getCartItems($conn, $_SESSION['user_id']);
 $cart_total = getCartTotal($conn, $_SESSION['user_id']);
 
 // Handle quantity update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_cart'])) {
+    $quantity_updates = [];
+    $remove_ids = [];
+
     foreach ($_POST['quantity'] as $product_id => $quantity) {
+        $product_id = intval($product_id);
         $quantity = intval($quantity);
+
         if ($quantity <= 0) {
-            removeFromCart($conn, $_SESSION['user_id'], $product_id);
+            $remove_ids[] = $product_id;
         } else {
-            $sql = "UPDATE tblCart SET quantity = ? WHERE user_id = ? AND product_id = ?";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "iii", $quantity, $_SESSION['user_id'], $product_id);
-            mysqli_stmt_execute($stmt);
+            $quantity_updates[$product_id] = $quantity;
         }
     }
+
+    if (!empty($quantity_updates)) {
+        $case_sql = [];
+        $product_ids = [];
+        foreach ($quantity_updates as $product_id => $quantity) {
+            $case_sql[] = "WHEN {$product_id} THEN {$quantity}";
+            $product_ids[] = $product_id;
+        }
+
+        $sql = "UPDATE tblCart SET quantity = CASE product_id " . implode(' ', $case_sql) . " END WHERE user_id = " . intval($_SESSION['user_id']) . " AND product_id IN (" . implode(',', $product_ids) . ")";
+        mysqli_query($conn, $sql);
+    }
+
+    if (!empty($remove_ids)) {
+        $sql = "DELETE FROM tblCart WHERE user_id = " . intval($_SESSION['user_id']) . " AND product_id IN (" . implode(',', $remove_ids) . ")";
+        mysqli_query($conn, $sql);
+    }
+
     header('Location: index.php?page=cart');
     exit();
 }
@@ -49,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_cart'])) {
                                 <button type="button" class="quantity-btn plus" data-product="<?php echo $item['product_id']; ?>">+</button>
                             </div>
                             <div>
-                                <a href="?remove=<?php echo $item['product_id']; ?>" class="remove-btn" onclick="return confirm('Remove this item?')">
+                                <a href="index.php?page=cart&remove=<?php echo $item['product_id']; ?>" class="remove-btn" onclick="return confirm('Remove this item?')">
                                     <i class="fas fa-trash-alt"></i>
                                 </a>
                             </div>
