@@ -4,6 +4,8 @@
 
 /** @var mysqli $conn */
 
+$view_mode = isset($_GET['view']) ? sanitizeInput($_GET['view']) : 'grid';
+
 // Get filter parameters
 $search = isset($_GET['search']) ? sanitizeInput($_GET['search']) : '';
 $brand = isset($_GET['brand']) ? sanitizeInput($_GET['brand']) : '';
@@ -98,6 +100,10 @@ $brands_result = mysqli_query($conn, $brands_sql);
             <span style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px;"> 500+ Items</span>
             <span style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px;"> 50+ Brands</span>
             <span style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px;"> Eco-Friendly</span>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px;">
+            <a href="index.php?page=browse&view=table" class="btn-primary" style="background: white; color: var(--pastime-green);">eShop</a>
+            <a href="index.php?page=cart" class="btn-outline" style="border-color: white; color: white;">Show Cart</a>
         </div>
     </div>
     
@@ -210,12 +216,58 @@ $brands_result = mysqli_query($conn, $brands_sql);
                     <i class="fas fa-box"></i> <?php echo mysqli_num_rows($products); ?> products found
                 </p>
                 <div style="display: flex; gap: 10px;">
+                    <a href="index.php?page=browse&view=table" class="btn-outline" style="padding: 8px 16px; text-decoration: none; <?php echo $view_mode === 'table' ? 'background: var(--pastime-green); color: white;' : ''; ?>">
+                        <i class="fas fa-table"></i> Table View
+                    </a>
+                    <a href="index.php?page=browse" class="btn-outline" style="padding: 8px 16px; text-decoration: none; <?php echo $view_mode !== 'table' ? 'background: var(--pastime-green); color: white;' : ''; ?>">
+                        <i class="fas fa-th-large"></i> Grid View
+                    </a>
                     <button onclick="document.getElementById('filterForm').submit();" class="btn-outline" style="padding: 8px 16px;">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
                 </div>
             </div>
-            
+
+            <?php if ($view_mode === 'table'): ?>
+                <div style="overflow-x: auto; background: white; border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
+                    <table class="admin-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Item</th>
+                                <th>Price</th>
+                                <th>Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (mysqli_num_rows($products) > 0): ?>
+                                <?php while ($product = mysqli_fetch_assoc($products)): ?>
+                                    <tr>
+                                        <td style="width: 90px;">
+                                            <img src="<?php echo getProductImage($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px;" onerror="this.src='images/placeholder.jpg'">
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;"><?php echo htmlspecialchars($product['title']); ?></div>
+                                            <div style="color: var(--grey); font-size: 13px;"><?php echo htmlspecialchars($product['brand']); ?></div>
+                                        </td>
+                                        <td>R <?php echo number_format($product['price'], 2); ?></td>
+                                        <td><?php echo htmlspecialchars($product['condition']); ?></td>
+                                        <td>
+                                            <button onclick="addToCartWithPopup(<?php echo $product['product_id']; ?>, '<?php echo addslashes($product['title']); ?>', <?php echo $product['price']; ?>)" class="btn-primary" style="padding: 8px 12px; margin-right: 8px;">Add to Cart</button>
+                                            <a href="index.php?page=cart" class="btn-outline" style="padding: 8px 12px; text-decoration: none;">Show Cart</a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px;">No products found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
             <div class="products-grid">
                 <?php if (mysqli_num_rows($products) > 0): ?>
                     <?php while ($product = mysqli_fetch_assoc($products)): ?>
@@ -251,6 +303,7 @@ $brands_result = mysqli_query($conn, $brands_sql);
                     </div>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
