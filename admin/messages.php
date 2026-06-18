@@ -38,8 +38,7 @@ $messages = mysqli_query($conn, $sql);
         .admin-main { flex: 1; }
         .admin-header { background: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
         .admin-content { padding: 24px; }
-        .message-card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-        .message-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-size: 14px; }
+        .message-card { margin-bottom: 16px; }
     </style>
 </head>
 <body>
@@ -65,21 +64,37 @@ $messages = mysqli_query($conn, $sql);
         <main class="admin-main">
             <div class="admin-header"><h1>Messages</h1></div>
             <div class="admin-content">
-                <?php while ($msg = mysqli_fetch_assoc($messages)): ?>
-                    <div class="message-card">
-                        <div class="message-header">
-                            <span><strong>From:</strong> <?php echo $msg['sender_name']; ?></span>
-                            <span><strong>To:</strong> <?php echo $msg['receiver_name']; ?></span>
-                            <span><?php echo date('M d, Y H:i', strtotime($msg['created_at'])); ?></span>
+                <?php if (mysqli_num_rows($messages) > 0): ?>
+                    <?php while ($msg = mysqli_fetch_assoc($messages)): ?>
+                        <div class="message-card">
+                            <div class="message-card-header">
+                                <div class="message-card-meta">
+                                    <span class="message-badge message-pill-user"><i class="fas fa-paper-plane"></i> From</span>
+                                    <strong><?php echo htmlspecialchars($msg['sender_name']); ?></strong>
+                                    <span class="message-badge message-pill-admin"><i class="fas fa-inbox"></i> To</span>
+                                    <strong><?php echo htmlspecialchars($msg['receiver_name']); ?></strong>
+                                </div>
+                                <div class="message-meta">
+                                    <span><i class="far fa-clock"></i> <?php echo date('M d, Y H:i', strtotime($msg['created_at'])); ?></span>
+                                </div>
+                            </div>
+                            <?php if (!empty($msg['product_title'])): ?>
+                                <div class="message-product-tag">
+                                    <i class="fas fa-tag"></i>
+                                    <span><strong>Product:</strong> <?php echo htmlspecialchars($msg['product_title']); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <div class="message-card-body">
+                                <?php echo nl2br(htmlspecialchars($msg['message_text'])); ?>
+                            </div>
                         </div>
-                        <?php if ($msg['product_title']): ?>
-                            <div><strong>Product:</strong> <?php echo $msg['product_title']; ?></div>
-                        <?php endif; ?>
-                        <div style="margin-top: 10px; padding: 10px; background: #f5f0e8; border-radius: 8px;"><?php echo nl2br(htmlspecialchars($msg['message_text'])); ?></div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="message-empty-state">
+                        <i class="fas fa-envelope-open" style="font-size: 48px; color: var(--grey); margin-bottom: 16px;"></i>
+                        <h3>No messages yet</h3>
+                        <p>New conversations will appear here once users start sending messages.</p>
                     </div>
-                <?php endwhile; ?>
-                <?php if (mysqli_num_rows($messages) == 0): ?>
-                    <p>No messages found.</p>
                 <?php endif; ?>
             </div>
         </main>
