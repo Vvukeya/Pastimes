@@ -4,8 +4,12 @@
 
 /** @var mysqli $conn */
 
-require_once __DIR__ . '/../includes/auth.php';
-requireLogin();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php?page=login&message=checkout');
+    exit();
+}
+
+$cart = new ShoppingCart($conn, intval($_SESSION['user_id']));
 
 $cart_items = getCartItems($conn, $_SESSION['user_id']);
 $cart_total = getCartTotal($conn, $_SESSION['user_id']);
@@ -26,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($payment_method)) {
         $error = 'Please select a payment method';
     } else {
-        $order_number = createOrder($conn, $_SESSION['user_id'], $delivery_address, $payment_method);
+        $order_number = $cart->Checkout($delivery_address, $payment_method);
         
         if ($order_number) {
             header("Location: index.php?page=order-success&order=" . urlencode($order_number));
