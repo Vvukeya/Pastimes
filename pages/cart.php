@@ -2,6 +2,8 @@
 // Shopping Cart Page
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 require_once __DIR__ . '/../includes/auth.php';
 requireLogin();
 

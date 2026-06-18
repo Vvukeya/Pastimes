@@ -1,6 +1,8 @@
 <?php
 // pages/seller.php - View seller profile and their products
 
+/** @var mysqli $conn */
+
 $seller_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($seller_id == 0) {

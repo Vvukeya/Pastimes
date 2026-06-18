@@ -3,6 +3,8 @@
 // Student: Vutivi & Karabo
 // Date: April 2026
 
+/** @var mysqli $conn */
+
 require_once __DIR__ . '/../includes/auth.php';
 requireLogin();
 

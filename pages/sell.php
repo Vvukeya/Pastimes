@@ -2,6 +2,8 @@
 // Sell Page - Submit items for sale
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 require_once __DIR__ . '/../includes/auth.php';
 requireLogin();
 

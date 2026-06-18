@@ -2,6 +2,8 @@
 // Login Page
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 $error = '';
 $username = '';
 

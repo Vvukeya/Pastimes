@@ -2,6 +2,8 @@
 // Registration Page
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 $error = '';
 $success = '';
 

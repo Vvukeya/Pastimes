@@ -3,5 +3,7 @@
 // Student: Vutivi & Karabo
 
 require_once __DIR__ . '/../config/database.php';
+
+/** @var mysqli $conn */
 return $conn;
 ?>

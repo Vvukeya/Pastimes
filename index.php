@@ -9,6 +9,8 @@ session_start();
 // Include database connection
 require_once 'config/database.php';
 
+/** @var mysqli $conn */
+
 // Include functions
 require_once 'includes/functions.php';
 

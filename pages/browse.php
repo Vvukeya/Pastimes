@@ -2,6 +2,8 @@
 // Browse Products Page
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 // Get filter parameters
 $search = isset($_GET['search']) ? sanitizeInput($_GET['search']) : '';
 $brand = isset($_GET['brand']) ? sanitizeInput($_GET['brand']) : '';

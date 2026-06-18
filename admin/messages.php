@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+/** @var mysqli $conn */
 require_once '../includes/auth.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {

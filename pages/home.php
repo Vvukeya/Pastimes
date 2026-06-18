@@ -2,6 +2,8 @@
 // Home Page
 // Student: Vutivi & Karabo
 
+/** @var mysqli $conn */
+
 $featured_products = getFeaturedProducts($conn, 8);
 ?>
 

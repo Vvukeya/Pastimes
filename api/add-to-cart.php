@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
-
+/** @var mysqli $conn */
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {

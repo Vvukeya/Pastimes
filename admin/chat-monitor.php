@@ -2,6 +2,7 @@
 // Admin Chat Monitor - View and reply to all user chats
 session_start();
 require_once '../config/database.php';
+/** @var mysqli $conn */
 require_once '../includes/auth.php';
 requireAdmin();
 
