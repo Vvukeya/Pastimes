@@ -33,7 +33,7 @@ $page_files = [
 ];
 
 // Pages that don't require login
-$public_pages = ['home', 'register', 'login', 'browse', 'product', 'seller'];
+$public_pages = ['home', 'register', 'login', 'browse', 'product', 'seller', 'cart', 'checkout'];
 
 // Check if user needs to be logged in
 if (!in_array($page, $public_pages) && !isset($_SESSION['user_id'])) {
