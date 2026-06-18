@@ -11,12 +11,14 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$cart = new ShoppingCart($conn, intval($_SESSION['user_id']));
+
 $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
 $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
 
 if ($product_id > 0) {
     if ($quantity <= 0) {
-        removeFromCart($conn, $_SESSION['user_id'], $product_id);
+        $cart->RemoveItem($product_id);
     } else {
         $sql = "UPDATE tblCart SET quantity = ? WHERE user_id = ? AND product_id = ?";
         $stmt = mysqli_prepare($conn, $sql);
