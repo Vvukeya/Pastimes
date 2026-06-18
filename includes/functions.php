@@ -2,7 +2,7 @@
 // Helper functions
 // Student: Vutivi & Karabo
 
-function getCartCount($conn, $user_id) {
+function getCartCount(mysqli $conn, $user_id) {
     $sql = "SELECT COALESCE(SUM(quantity), 0) as total FROM tblCart WHERE user_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -12,7 +12,7 @@ function getCartCount($conn, $user_id) {
     return $row['total'] ?? 0;
 }
 
-function getFeaturedProducts($conn, $limit = 8) {
+function getFeaturedProducts(mysqli $conn, $limit = 8) {
     $sql = "SELECT * FROM tblClothes WHERE status = 'approved' ORDER BY created_at DESC LIMIT ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $limit);
@@ -20,7 +20,7 @@ function getFeaturedProducts($conn, $limit = 8) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function getProductById($conn, $product_id) {
+function getProductById(mysqli $conn, $product_id) {
     $sql = "SELECT p.*, u.name as seller_name, u.username as seller_username 
             FROM tblClothes p 
             JOIN tblUser u ON p.seller_id = u.user_id 
@@ -32,7 +32,7 @@ function getProductById($conn, $product_id) {
     return mysqli_fetch_assoc($result);
 }
 
-function getAllProducts($conn, $filters = []) {
+function getAllProducts(mysqli $conn, $filters = []) {
     $sql = "SELECT * FROM tblClothes WHERE status = 'approved'";
     $params = [];
     $types = "";
@@ -98,7 +98,7 @@ function getAllProducts($conn, $filters = []) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function addToCart($conn, $user_id, $product_id, $quantity = 1) {
+function addToCart(mysqli $conn, $user_id, $product_id, $quantity = 1) {
     $sql = "SELECT cart_id, quantity FROM tblCart WHERE user_id = ? AND product_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ii", $user_id, $product_id);
@@ -119,14 +119,14 @@ function addToCart($conn, $user_id, $product_id, $quantity = 1) {
     return mysqli_stmt_execute($stmt);
 }
 
-function removeFromCart($conn, $user_id, $product_id) {
+function removeFromCart(mysqli $conn, $user_id, $product_id) {
     $sql = "DELETE FROM tblCart WHERE user_id = ? AND product_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ii", $user_id, $product_id);
     return mysqli_stmt_execute($stmt);
 }
 
-function getCartItems($conn, $user_id) {
+function getCartItems(mysqli $conn, $user_id) {
     $sql = "SELECT c.*, p.title, p.price, p.image_url, p.brand 
             FROM tblCart c 
             JOIN tblClothes p ON c.product_id = p.product_id 
@@ -137,7 +137,7 @@ function getCartItems($conn, $user_id) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function getCartTotal($conn, $user_id) {
+function getCartTotal(mysqli $conn, $user_id) {
     $sql = "SELECT COALESCE(SUM(c.quantity * p.price), 0) as total 
             FROM tblCart c 
             JOIN tblClothes p ON c.product_id = p.product_id 
@@ -154,7 +154,7 @@ function generateOrderNumber() {
     return 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
 }
 
-function createOrder($conn, $user_id, $delivery_address, $payment_method) {
+function createOrder(mysqli $conn, $user_id, $delivery_address, $payment_method) {
     $total = getCartTotal($conn, $user_id);
     $order_number = generateOrderNumber();
     
@@ -204,7 +204,7 @@ function validatePassword($password) {
     return strlen($password) >= 8;
 }
 
-function getUserOrders($conn, $user_id) {
+function getUserOrders(mysqli $conn, $user_id) {
     $sql = "SELECT * FROM tblAorder WHERE user_id = ? ORDER BY created_at DESC";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -212,7 +212,7 @@ function getUserOrders($conn, $user_id) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function getUserListings($conn, $user_id) {
+function getUserListings(mysqli $conn, $user_id) {
     $sql = "SELECT * FROM tblClothes WHERE seller_id = ? ORDER BY created_at DESC";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -220,7 +220,7 @@ function getUserListings($conn, $user_id) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function getUserMessages($conn, $user_id) {
+function getUserMessages(mysqli $conn, $user_id) {
     $sql = "SELECT m.*, u.username as sender_name, p.title as product_title 
             FROM tblMessages m 
             JOIN tblUser u ON m.sender_id = u.user_id 
@@ -233,7 +233,7 @@ function getUserMessages($conn, $user_id) {
     return mysqli_stmt_get_result($stmt);
 }
 
-function sendMessage($conn, $sender_id, $receiver_id, $product_id, $message) {
+function sendMessage(mysqli $conn, $sender_id, $receiver_id, $product_id, $message) {
     $sql = "INSERT INTO tblMessages (sender_id, receiver_id, product_id, message_text, created_at, is_read) VALUES (?, ?, ?, ?, NOW(), 0)";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "iiis", $sender_id, $receiver_id, $product_id, $message);
@@ -262,7 +262,7 @@ function displayProductImage($image_url, $alt = 'Product Image', $class = '') {
 /**
  * Check if a user is following another user
  */
-function isFollowing($conn, $follower_id, $following_id) {
+function isFollowing(mysqli $conn, $follower_id, $following_id) {
     $sql = "SELECT follow_id FROM tblFollows WHERE follower_id = ? AND following_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ii", $follower_id, $following_id);
@@ -274,7 +274,7 @@ function isFollowing($conn, $follower_id, $following_id) {
 /**
  * Follow a user (seller)
  */
-function followUser($conn, $follower_id, $following_id) {
+function followUser(mysqli $conn, $follower_id, $following_id) {
     if ($follower_id == $following_id) {
         return false;
     }
@@ -287,7 +287,7 @@ function followUser($conn, $follower_id, $following_id) {
 /**
  * Unfollow a user
  */
-function unfollowUser($conn, $follower_id, $following_id) {
+function unfollowUser(mysqli $conn, $follower_id, $following_id) {
     $sql = "DELETE FROM tblFollows WHERE follower_id = ? AND following_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ii", $follower_id, $following_id);
@@ -297,7 +297,7 @@ function unfollowUser($conn, $follower_id, $following_id) {
 /**
  * Get follower count for a user
  */
-function getFollowerCount($conn, $user_id) {
+function getFollowerCount(mysqli $conn, $user_id) {
     $sql = "SELECT COUNT(*) as count FROM tblFollows WHERE following_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -310,7 +310,7 @@ function getFollowerCount($conn, $user_id) {
 /**
  * Get following count for a user
  */
-function getFollowingCount($conn, $user_id) {
+function getFollowingCount(mysqli $conn, $user_id) {
     $sql = "SELECT COUNT(*) as count FROM tblFollows WHERE follower_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -323,7 +323,7 @@ function getFollowingCount($conn, $user_id) {
 /**
  * Get all followers of a user
  */
-function getUserFollowers($conn, $user_id) {
+function getUserFollowers(mysqli $conn, $user_id) {
     $sql = "SELECT u.*, f.created_at as followed_since 
             FROM tblFollows f 
             JOIN tblUser u ON f.follower_id = u.user_id 
@@ -338,7 +338,7 @@ function getUserFollowers($conn, $user_id) {
 /**
  * Get all users that a user follows
  */
-function getUserFollowing($conn, $user_id) {
+function getUserFollowing(mysqli $conn, $user_id) {
     $sql = "SELECT u.*, f.created_at as followed_since 
             FROM tblFollows f 
             JOIN tblUser u ON f.following_id = u.user_id 
@@ -353,7 +353,7 @@ function getUserFollowing($conn, $user_id) {
 /**
  * Get products from followed sellers for feed
  */
-function getFollowedSellersProducts($conn, $user_id, $limit = 20) {
+function getFollowedSellersProducts(mysqli $conn, $user_id, $limit = 20) {
     $sql = "SELECT p.*, u.username as seller_name, u.name as seller_first_name, u.surname as seller_last_name
             FROM tblClothes p
             JOIN tblFollows f ON p.seller_id = f.following_id
@@ -372,7 +372,7 @@ function getFollowedSellersProducts($conn, $user_id, $limit = 20) {
 /**
  * Send a message with file attachment (supports admin replies)
  */
-function sendMessageWithFile($conn, $sender_id, $receiver_id, $product_id, $message, $file_name = null, $file_path = null, $file_type = null, $file_size = null, $is_admin_reply = 0) {
+function sendMessageWithFile(mysqli $conn, $sender_id, $receiver_id, $product_id, $message, $file_name = null, $file_path = null, $file_type = null, $file_size = null, $is_admin_reply = 0) {
     $sql = "INSERT INTO tblMessages (sender_id, receiver_id, product_id, message_text, file_name, file_path, file_type, file_size, is_admin_reply, created_at, is_read) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)";
     $stmt = mysqli_prepare($conn, $sql);
@@ -383,7 +383,7 @@ function sendMessageWithFile($conn, $sender_id, $receiver_id, $product_id, $mess
 /**
  * Send admin reply - stores in tblAdminReplies AND creates a message in tblMessages
  */
-function sendAdminReply($conn, $message_id, $admin_id, $reply_text, $file_name = null, $file_path = null, $file_type = null, $file_size = null) {
+function sendAdminReply(mysqli $conn, $message_id, $admin_id, $reply_text, $file_name = null, $file_path = null, $file_type = null, $file_size = null) {
     // First, get the original message to know sender and receiver
     $sql = "SELECT sender_id, receiver_id, product_id FROM tblMessages WHERE message_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
@@ -418,7 +418,7 @@ function sendAdminReply($conn, $message_id, $admin_id, $reply_text, $file_name =
 /**
  * Get all conversations for admin monitoring
  */
-function getAllConversations($conn) {
+function getAllConversations(mysqli $conn) {
     $sql = "SELECT DISTINCT 
             LEAST(m.sender_id, m.receiver_id) as user1_id,
             GREATEST(m.sender_id, m.receiver_id) as user2_id,
@@ -441,7 +441,7 @@ function getAllConversations($conn) {
 /**
  * Get all messages between two users (including admin replies)
  */
-function getConversationMessages($conn, $user1_id, $user2_id) {
+function getConversationMessages(mysqli $conn, $user1_id, $user2_id) {
     $sql = "SELECT m.*, 
             u.username as sender_name, u.name as sender_first, u.surname as sender_last,
             u2.username as receiver_name,
@@ -463,7 +463,7 @@ function getConversationMessages($conn, $user1_id, $user2_id) {
 /**
  * Get messages for a specific user (shows both user and admin messages)
  */
-function getUserMessagesWithAdmin($conn, $user_id, $limit = 20) {
+function getUserMessagesWithAdmin(mysqli $conn, $user_id, $limit = 20) {
     $sql = "SELECT m.*, 
             u.username as sender_name, u.name as sender_first, u.surname as sender_last,
             p.title as product_title,
@@ -491,7 +491,7 @@ function getUserMessagesWithAdmin($conn, $user_id, $limit = 20) {
 /**
  * Get unread messages count for admin
  */
-function getUnreadMessagesCount($conn) {
+function getUnreadMessagesCount(mysqli $conn) {
     $sql = "SELECT COUNT(*) as count FROM tblMessages WHERE is_read = 0";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
@@ -501,7 +501,7 @@ function getUnreadMessagesCount($conn) {
 /**
  * Mark message as read
  */
-function markMessageAsRead($conn, $message_id) {
+function markMessageAsRead(mysqli $conn, $message_id) {
     $sql = "UPDATE tblMessages SET is_read = 1 WHERE message_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $message_id);
