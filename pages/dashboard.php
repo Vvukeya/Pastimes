@@ -15,21 +15,27 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'orders';
 $user_id = $_SESSION['user_id'];
 
 // Get user details for profile
-$user_sql = "SELECT * FROM tblUser WHERE user_id = ?";
+$user_sql = "SELECT user_id, name, surname, email, username, phone, delivery_address, is_verified, is_seller_verified, role, created_at, last_login FROM tblUser WHERE user_id = ?";
 $user_stmt = mysqli_prepare($conn, $user_sql);
 mysqli_stmt_bind_param($user_stmt, "i", $user_id);
 mysqli_stmt_execute($user_stmt);
 $user_data = mysqli_fetch_assoc(mysqli_stmt_get_result($user_stmt));
 
 // Get orders
-$orders_sql = "SELECT * FROM tblAorder WHERE user_id = ? ORDER BY created_at DESC";
+$orders_sql = "SELECT order_id, user_id, order_number, total_amount, delivery_address, status, payment_method, payment_status, tracking_number, created_at FROM tblAorder WHERE user_id = ? ORDER BY created_at DESC";
 $orders_stmt = mysqli_prepare($conn, $orders_sql);
 mysqli_stmt_bind_param($orders_stmt, "i", $user_id);
 mysqli_stmt_execute($orders_stmt);
 $orders = mysqli_stmt_get_result($orders_stmt);
 
+$purchase_total_sql = "SELECT COALESCE(SUM(total_amount), 0) AS total_spent, COUNT(*) AS total_orders FROM tblAorder WHERE user_id = ?";
+$purchase_total_stmt = mysqli_prepare($conn, $purchase_total_sql);
+mysqli_stmt_bind_param($purchase_total_stmt, "i", $user_id);
+mysqli_stmt_execute($purchase_total_stmt);
+$purchase_summary = mysqli_fetch_assoc(mysqli_stmt_get_result($purchase_total_stmt));
+
 // Get user's listings
-$listings_sql = "SELECT * FROM tblClothes WHERE seller_id = ? ORDER BY created_at DESC";
+$listings_sql = "SELECT product_id, seller_id, title, brand, description, price, `condition`, category, size, colour, image_url, status, views, created_at, sold_date FROM tblClothes WHERE seller_id = ? ORDER BY created_at DESC";
 $listings_stmt = mysqli_prepare($conn, $listings_sql);
 mysqli_stmt_bind_param($listings_stmt, "i", $user_id);
 mysqli_stmt_execute($listings_stmt);
@@ -213,6 +219,16 @@ if (isset($_GET['error']) && $_GET['error'] == 'not_verified') {
             <!-- ORDERS TAB -->
             <?php if ($active_tab == 'orders'): ?>
                 <h2 style="margin-bottom: 20px;"><i class="fas fa-shopping-bag"></i> My Orders</h2>
+                <div class="stats-grid" style="margin-bottom: 20px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                    <div class="stat-card">
+                        <h3>Total Orders</h3>
+                        <div class="stat-number"><?php echo intval($purchase_summary['total_orders'] ?? 0); ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Purchases</h3>
+                        <div class="stat-number">R <?php echo number_format($purchase_summary['total_spent'] ?? 0, 2); ?></div>
+                    </div>
+                </div>
                 <?php if (mysqli_num_rows($orders) > 0): ?>
                     <div style="overflow-x: auto;">
                         <table class="admin-table">
