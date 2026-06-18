@@ -13,15 +13,15 @@ $featured_products = getFeaturedProducts($conn, 8);
         <div class="hero-grid">
             <div class="hero-content">
                 <h1 class="hero-title">
-                    Quality Branded Clothing,<br>
-                    <span>Pre-Loved and Purposeful</span>
+                    Your Branded Clothing <br>
+                    <span>eShop for pre-loved fashion</span>
                 </h1>
                 <p class="hero-text">
-                    Discover premium second-hand fashion at unbeatable prices. 
-                    Sustainable shopping made easy with Pastimes.
+                    Pastimes is a second-hand clothing e-commerce store built for customers who want quality fashion, simple shopping, and a clean checkout flow.
                 </p>
                 <div class="hero-buttons">
-                    <a href="index.php?page=browse" class="btn-primary">Shop Now</a>
+                    <a href="index.php?page=browse&view=table" class="btn-primary">eShop</a>
+                    <a href="index.php?page=cart" class="btn-outline">Show Cart</a>
                     <a href="#how-it-works" class="btn-outline">How It Works</a>
                 </div>
             </div>
