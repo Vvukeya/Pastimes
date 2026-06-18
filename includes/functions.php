@@ -150,6 +150,33 @@ function getCartTotal(mysqli $conn, $user_id) {
     return $row['total'] ?? 0;
 }
 
+function ensureProductStockColumn(mysqli $conn) {
+    $sql = "SELECT COUNT(*) as column_count 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'tblClothes' 
+            AND COLUMN_NAME = 'quantity'";
+    $result = mysqli_query($conn, $sql);
+    $row = $result ? mysqli_fetch_assoc($result) : ['column_count' => 0];
+
+    if (intval($row['column_count'] ?? 0) === 0) {
+        mysqli_query($conn, "ALTER TABLE tblClothes ADD COLUMN quantity INT NOT NULL DEFAULT 1 AFTER price");
+    }
+}
+
+function decrementProductStock(mysqli $conn, $product_id, $quantity) {
+    ensureProductStockColumn($conn);
+
+    $sql = "UPDATE tblClothes 
+            SET quantity = CASE WHEN quantity > ? THEN quantity - ? ELSE 0 END,
+                status = CASE WHEN quantity <= ? THEN 'sold' ELSE status END,
+                sold_date = CASE WHEN quantity <= ? THEN NOW() ELSE sold_date END
+            WHERE product_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "iiiii", $quantity, $quantity, $quantity, $quantity, $product_id);
+    return mysqli_stmt_execute($stmt);
+}
+
 function generateOrderNumber() {
     return 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
 }
@@ -174,6 +201,8 @@ function createOrder(mysqli $conn, $user_id, $delivery_address, $payment_method)
             $stmt = mysqli_prepare($conn, $sql);
             mysqli_stmt_bind_param($stmt, "iiid", $order_id, $item['product_id'], $item['quantity'], $item['price']);
             mysqli_stmt_execute($stmt);
+
+            decrementProductStock($conn, $item['product_id'], intval($item['quantity']));
         }
         
         $sql = "DELETE FROM tblCart WHERE user_id = ?";
@@ -182,6 +211,8 @@ function createOrder(mysqli $conn, $user_id, $delivery_address, $payment_method)
         mysqli_stmt_execute($stmt);
         
         mysqli_commit($conn);
+        $_SESSION['last_order_number'] = $order_number;
+        $_SESSION['last_order_session_id'] = session_id();
         return $order_number;
     } catch (Exception $e) {
         mysqli_rollback($conn);
